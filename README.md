@@ -42,6 +42,16 @@ The application demonstrates production-ready patterns for:
 
 ---
 
+## Demo Video
+
+A 5–12 minute walkthrough covering architecture, Dockerized startup, and core features is available on YouTube.
+
+- Watch: [ADD-YOUR-YOUTUBE-LINK-HERE]
+- Contents: Introduction, architecture tour, running `docker-compose up -d`, tenant registration, user management, projects & tasks, multi-tenancy demonstration, and brief code walkthrough.
+- Tip: Replace the placeholder link above with your actual video URL before submission.
+
+---
+
 ## Key Features
 
 ### 🔐 **Multi-Tenancy & Security**
