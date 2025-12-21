@@ -6,7 +6,7 @@ const db = require('../config/database');
 const runMigrations = async() => {
     console.log('Starting database migrations...');
 
-    const migrationsDir = path.join(__dirname, '../../database/migrations');
+    const migrationsDir = path.join(__dirname, '../migrations');
     const files = fs.readdirSync(migrationsDir).sort();
 
     for (const file of files) {
