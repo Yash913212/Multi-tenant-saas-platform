@@ -149,7 +149,7 @@ const seedDatabase = async() => {
          RETURNING id`, [tenantId, 'admin@techstart.com', hashedPassword, 'Sarah Williams', 'tenant_admin']
             );
 
-            const adminUserId = adminUserResult.rows[0]?.id;
+            const adminUserId = adminUserResult.rows[0] ? .id;
 
             // Create user for TechStart
             const userPassword = await bcrypt.hash('Dev@123', 10);
@@ -159,7 +159,7 @@ const seedDatabase = async() => {
          RETURNING id`, [tenantId, 'dev@techstart.com', userPassword, 'Mike Chen', 'user']
             );
 
-            const devUserId = devUserResult.rows[0]?.id;
+            const devUserId = devUserResult.rows[0] ? .id;
 
             // Create project for TechStart
             if (adminUserId) {
@@ -169,7 +169,7 @@ const seedDatabase = async() => {
            RETURNING id`, [tenantId, 'API Development', 'Build RESTful API for internal tools', adminUserId, 'active']
                 );
 
-                const projId = projResult.rows[0]?.id;
+                const projId = projResult.rows[0] ? .id;
 
                 // Create task for TechStart
                 if (projId && devUserId) {
