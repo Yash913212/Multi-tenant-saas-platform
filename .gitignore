@@ -1,0 +1,46 @@
+# Dependencies
+node_modules/
+package-lock.json
+npm-debug.log
+yarn-error.log
+
+# Environment variables (but NOT for this test - we're including .env with test values)
+# .env
+# .env.local
+# .env.*.local
+
+# Build directories
+build/
+dist/
+.next/
+out/
+
+# IDE and editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.env.swp
+
+# Database
+*.sqlite
+*.sqlite3
+pg_data/
+
+# Logs
+logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage/
+.pytest_cache/
+
+# Temporary files
+tmp/
+temp/

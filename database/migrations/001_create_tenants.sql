@@ -1,0 +1,14 @@
+CREATE TABLE IF NOT EXISTS tenants (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(255) NOT NULL,
+  subdomain VARCHAR(255) UNIQUE NOT NULL,
+  status VARCHAR(50) DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'suspended')),
+  subscription_plan VARCHAR(50) DEFAULT 'free' CHECK (subscription_plan IN ('free', 'starter', 'pro', 'enterprise')),
+  max_users INTEGER DEFAULT 5,
+  max_projects INTEGER DEFAULT 5,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_tenants_subdomain ON tenants(subdomain);
+CREATE INDEX idx_tenants_status ON tenants(status);
