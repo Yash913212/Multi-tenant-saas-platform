@@ -106,7 +106,7 @@ export const Navbar = () => {
             <Link
               to="/dashboard"
               onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg flex items-center gap-2"
+              className="px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg flex items-center gap-2"
             >
               <FiHome size={18} />
               Dashboard
@@ -114,7 +114,7 @@ export const Navbar = () => {
             <Link
               to="/projects"
               onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg flex items-center gap-2"
+              className="px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg flex items-center gap-2"
             >
               <FiCheckCircle size={18} />
               Projects
@@ -123,7 +123,7 @@ export const Navbar = () => {
               <Link
                 to="/users"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg flex items-center gap-2"
+                className="px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg flex items-center gap-2"
               >
                 <FiUsers size={18} />
                 Users
