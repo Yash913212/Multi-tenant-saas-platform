@@ -465,6 +465,11 @@ curl http://localhost:5000/api/health
 open http://localhost:3000
 ```
 
+### Health Check Monitoring
+- Backend exposes `GET /api/health` with `status`, `database`, `timestamp`, `uptime`, `version`, and `env`
+- Docker healthcheck polls the endpoint and restarts on failure (unless-stopped policy)
+- Access locally: `http://localhost:5000/api/health`
+
 ### Troubleshooting Docker
 
 ```bash
