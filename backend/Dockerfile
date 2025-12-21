@@ -14,8 +14,8 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Install curl for health checks
-RUN apk add --no-cache curl
+# Install curl and postgresql-client for health checks and database readiness
+RUN apk add --no-cache curl postgresql-client bash
 
 # Copy dependencies from builder
 COPY --from=base /app/node_modules ./node_modules
@@ -27,6 +27,10 @@ COPY . .
 # Create necessary directories
 RUN mkdir -p /app/logs
 
+# Make entrypoint script executable
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
 # Expose port
 EXPOSE 5000
 
@@ -34,5 +38,5 @@ EXPOSE 5000
 HEALTHCHECK --interval=10s --timeout=5s --retries=5 \
   CMD curl -f http://localhost:5000/api/health || exit 1
 
-# Start application
-CMD ["npm", "start"]
+# Start application with migrations and seed data
+ENTRYPOINT ["/app/entrypoint.sh"]

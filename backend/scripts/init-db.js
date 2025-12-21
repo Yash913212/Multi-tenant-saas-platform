@@ -130,6 +130,57 @@ const seedDatabase = async() => {
             }
         }
 
+        // Create second tenant (TechStart Inc)
+        const techstartResult = await db.query(
+            `INSERT INTO tenants (name, subdomain, status, subscription_plan, max_users, max_projects)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       ON CONFLICT (subdomain) DO NOTHING
+       RETURNING id`, ['TechStart Inc', 'techstart', 'active', 'free', 5, 3]
+        );
+
+        if (techstartResult.rows.length > 0) {
+            const tenantId = techstartResult.rows[0].id;
+
+            // Create tenant admin for TechStart
+            const hashedPassword = await bcrypt.hash('Tech@123', 10);
+            const adminUserResult = await db.query(
+                `INSERT INTO users (tenant_id, email, password_hash, full_name, role, is_active)
+         VALUES ($1, $2, $3, $4, $5, true)
+         RETURNING id`, [tenantId, 'admin@techstart.com', hashedPassword, 'Sarah Williams', 'tenant_admin']
+            );
+
+            const adminUserId = adminUserResult.rows[0]?.id;
+
+            // Create user for TechStart
+            const userPassword = await bcrypt.hash('Dev@123', 10);
+            const devUserResult = await db.query(
+                `INSERT INTO users (tenant_id, email, password_hash, full_name, role, is_active)
+         VALUES ($1, $2, $3, $4, $5, true)
+         RETURNING id`, [tenantId, 'dev@techstart.com', userPassword, 'Mike Chen', 'user']
+            );
+
+            const devUserId = devUserResult.rows[0]?.id;
+
+            // Create project for TechStart
+            if (adminUserId) {
+                const projResult = await db.query(
+                    `INSERT INTO projects (tenant_id, name, description, created_by, status)
+           VALUES ($1, $2, $3, $4, $5)
+           RETURNING id`, [tenantId, 'API Development', 'Build RESTful API for internal tools', adminUserId, 'active']
+                );
+
+                const projId = projResult.rows[0]?.id;
+
+                // Create task for TechStart
+                if (projId && devUserId) {
+                    await db.query(
+                        `INSERT INTO tasks (project_id, tenant_id, title, description, status, priority, assigned_to)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)`, [projId, tenantId, 'Implement authentication endpoints', 'Add JWT-based authentication', 'in_progress', 'high', devUserId]
+                    );
+                }
+            }
+        }
+
         console.log('✓ Database seeding completed successfully!');
     } catch (error) {
         console.error('Error seeding database:', error.message);
