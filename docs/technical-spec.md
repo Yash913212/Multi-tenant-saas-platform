@@ -238,6 +238,23 @@ NODE_ENV=development
 
 # JWT Configuration
 JWT_SECRET=your-super-secret-key-must-be-at-least-32-characters-long
+
+### Docker Service Names and Fixed Ports (Mandatory)
+
+All services are defined with fixed, public ports for evaluation:
+
+- Database service: `database`
+  - Ports: `5432` external → `5432` internal
+  - Volume: `db_data:/var/lib/postgresql/data`
+- Backend service: `backend`
+  - Ports: `5000` external → `5000` internal
+  - Healthcheck: `GET http://localhost:5000/api/health`
+- Frontend service: `frontend`
+  - Ports: `3000` external → `3000` internal
+  - Environment: `REACT_APP_API_URL=http://backend:5000/api`
+
+Network: `saas_network` (bridge)
+
 JWT_EXPIRES_IN=24h
 
 # Frontend URL (for CORS)
