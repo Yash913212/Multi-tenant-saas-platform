@@ -850,7 +850,9 @@ Check API and database health status.
   "status": "ok",
   "database": "connected",
   "timestamp": "2024-01-20T18:30:00Z",
-  "uptime": 3600
+  "uptime": 3600,
+  "version": "1.0.0",
+  "env": "production"
 }
 ```
 
