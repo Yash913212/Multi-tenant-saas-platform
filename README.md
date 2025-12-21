@@ -228,6 +228,20 @@ npm start
 # Backend runs on http://localhost:5000
 ```
 
+---
+
+## Evaluation Checklist (Quick Reference)
+
+- [ ] Public GitHub repository with complete source
+- [ ] Docker Compose with services: database, backend, frontend
+- [ ] Fixed ports: DB 5432, API 5000, Frontend 3000
+- [ ] Automatic migrations + seed on backend startup
+- [ ] Health endpoint `GET /api/health` responds 200 OK
+- [ ] Seed credentials documented in `submission.json`
+- [ ] Frontend accessible at `http://localhost:3000`
+- [ ] 19 API endpoints functional and secured
+- [ ] Documentation in `docs/` with architecture diagrams
+
 #### Step 4: Setup Frontend
 ```bash
 cd ../frontend
