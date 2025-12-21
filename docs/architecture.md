@@ -3,6 +3,16 @@
 
 ---
 
+## Containerization Overview
+
+This platform is fully containerized with Docker Compose using three services:
+
+- `database` (PostgreSQL): 5432 → 5432, persistent volume `db_data`
+- `backend` (Node.js/Express): 5000 → 5000, automatic migrations + seed via entrypoint, health `GET /api/health`
+- `frontend` (React): 3000 → 3000, API base `http://backend:5000/api`
+
+All services run on the `saas_network` bridge and are started together with `docker-compose up -d`.
+
 ## 1. System Architecture Overview
 
 The Multi-Tenant SaaS Platform follows a three-tier architecture pattern with clear separation of concerns:
