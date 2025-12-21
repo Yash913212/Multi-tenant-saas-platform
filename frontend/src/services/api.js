@@ -27,11 +27,17 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response ? .status === 401) {
+        // Handle unauthorized responses consistently
+        if (error && error.response && error.response.status === 401) {
             // Clear token and redirect to login
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             window.location.href = '/login';
+        }
+        // Network errors or no response from server
+        if (!error.response) {
+            // Optionally, you could show a toast or log
+            // console.error('Network error or no response:', error.message);
         }
         return Promise.reject(error);
     }

@@ -194,7 +194,43 @@ docker --version       # Should be 20.10+ (optional)
 
 ## Quick Start
 
-### **Option 1: Local Development (Without Docker)**
+### **Option 1: Using Docker (Recommended)**
+
+**Prerequisites:** Docker Desktop installed and running
+
+```bash
+# Clone repository
+git clone <repository-url>
+cd multi-tenant-saas-platform
+
+# Start all services (database, backend, frontend)
+docker compose up -d
+
+# Verify all services are healthy
+docker compose ps
+
+# Access the application
+# Frontend: http://localhost:3000
+# Backend API: http://localhost:5000/api
+# Health Check: http://localhost:5000/api/health
+```
+
+**Test Credentials:**
+- **Super Admin:** superadmin@system.com / Admin@123
+- **Demo Admin:** admin@demo.com / Demo@123
+- **Demo User:** user1@demo.com / User@123
+
+**Stop Services:**
+```bash
+docker compose down        # Stop containers
+docker compose down -v     # Stop and remove all data
+```
+
+See [SETUP.md](SETUP.md) for detailed setup instructions and troubleshooting.
+
+---
+
+### **Option 2: Local Development (Without Docker)**
 
 #### Step 1: Clone Repository
 ```bash

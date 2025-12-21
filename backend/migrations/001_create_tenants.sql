@@ -10,5 +10,6 @@ CREATE TABLE IF NOT EXISTS tenants (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_tenants_subdomain ON tenants(subdomain);
-CREATE INDEX idx_tenants_status ON tenants(status);
+CREATE INDEX IF NOT EXISTS idx_tenants_subdomain ON tenants(subdomain);
+CREATE INDEX IF NOT EXISTS idx_tenants_status ON tenants(status);
+

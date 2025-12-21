@@ -1,7 +1,8 @@
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
-const db = require('../config/database');
+const db = require('../src/config/database')
+const bcrypt = require('bcryptjs');
 
 const runMigrations = async() => {
     console.log('Starting database migrations...');
@@ -32,18 +33,16 @@ const seedDatabase = async() => {
     console.log('Seeding database...');
 
     try {
-        // Create super admin
-        const bcrypt = require('bcryptjs');
+        // Super admin
         const hashedAdminPassword = await bcrypt.hash('Admin@123', 10);
 
-        const adminResult = await db.query(
+        await db.query(
             `INSERT INTO users (email, password_hash, full_name, role, tenant_id, is_active)
        VALUES ($1, $2, $3, $4, NULL, true)
-       ON CONFLICT DO NOTHING
-       RETURNING id`, ['superadmin@system.com', hashedAdminPassword, 'Super Admin', 'super_admin']
+       ON CONFLICT DO NOTHING`, ['superadmin@system.com', hashedAdminPassword, 'Super Admin', 'super_admin']
         );
 
-        // Create demo tenant
+        // Demo tenant
         const tenantResult = await db.query(
             `INSERT INTO tenants (name, subdomain, status, subscription_plan, max_users, max_projects)
        VALUES ($1, $2, $3, $4, $5, $6)
@@ -54,7 +53,6 @@ const seedDatabase = async() => {
         if (tenantResult.rows.length > 0) {
             const tenantId = tenantResult.rows[0].id;
 
-            // Create tenant admin
             const hashedPassword = await bcrypt.hash('Demo@123', 10);
             const adminUserResult = await db.query(
                 `INSERT INTO users (tenant_id, email, password_hash, full_name, role, is_active)
@@ -62,10 +60,10 @@ const seedDatabase = async() => {
          RETURNING id`, [tenantId, 'admin@demo.com', hashedPassword, 'Demo Admin', 'tenant_admin']
             );
 
-            const adminUserId = adminUserResult.rows[0] ? .id;
+            const adminUserId = adminUserResult.rows[0]?.id;
 
-            // Create demo users
             const userPassword = await bcrypt.hash('User@123', 10);
+
             const user1Result = await db.query(
                 `INSERT INTO users (tenant_id, email, password_hash, full_name, role, is_active)
          VALUES ($1, $2, $3, $4, $5, true)
@@ -78,10 +76,9 @@ const seedDatabase = async() => {
          RETURNING id`, [tenantId, 'user2@demo.com', userPassword, 'User Two', 'user']
             );
 
-            const user1Id = user1Result.rows[0] ? .id;
-            const user2Id = user2Result.rows[0] ? .id;
+            const user1Id = user1Result.rows[0]?.id;
+            const user2Id = user2Result.rows[0]?.id;
 
-            // Create projects
             if (adminUserId) {
                 const proj1Result = await db.query(
                     `INSERT INTO projects (tenant_id, name, description, created_by, status)
@@ -95,10 +92,9 @@ const seedDatabase = async() => {
            RETURNING id`, [tenantId, 'Project Beta', 'Second demo project', adminUserId, 'active']
                 );
 
-                const proj1Id = proj1Result.rows[0] ? .id;
-                const proj2Id = proj2Result.rows[0] ? .id;
+                const proj1Id = proj1Result.rows[0]?.id;
+                const proj2Id = proj2Result.rows[0]?.id;
 
-                // Create tasks
                 if (proj1Id && user1Id) {
                     await db.query(
                         `INSERT INTO tasks (project_id, tenant_id, title, description, status, priority, assigned_to)
@@ -139,43 +135,43 @@ const seedDatabase = async() => {
         );
 
         if (techstartResult.rows.length > 0) {
-            const tenantId = techstartResult.rows[0].id;
+            const techTenantId = techstartResult.rows[0].id;
 
             // Create tenant admin for TechStart
-            const hashedPassword = await bcrypt.hash('Tech@123', 10);
-            const adminUserResult = await db.query(
+            const hashedTechPassword = await bcrypt.hash('Tech@123', 10);
+            const techAdminUserResult = await db.query(
                 `INSERT INTO users (tenant_id, email, password_hash, full_name, role, is_active)
          VALUES ($1, $2, $3, $4, $5, true)
-         RETURNING id`, [tenantId, 'admin@techstart.com', hashedPassword, 'Sarah Williams', 'tenant_admin']
+         RETURNING id`, [techTenantId, 'admin@techstart.com', hashedTechPassword, 'Sarah Williams', 'tenant_admin']
             );
 
-            const adminUserId = adminUserResult.rows[0] ? .id;
+            const techAdminUserId = techAdminUserResult.rows[0]?.id;
 
             // Create user for TechStart
-            const userPassword = await bcrypt.hash('Dev@123', 10);
+            const devPassword = await bcrypt.hash('Dev@123', 10);
             const devUserResult = await db.query(
                 `INSERT INTO users (tenant_id, email, password_hash, full_name, role, is_active)
          VALUES ($1, $2, $3, $4, $5, true)
-         RETURNING id`, [tenantId, 'dev@techstart.com', userPassword, 'Mike Chen', 'user']
+         RETURNING id`, [techTenantId, 'dev@techstart.com', devPassword, 'Mike Chen', 'user']
             );
 
-            const devUserId = devUserResult.rows[0] ? .id;
+            const devUserId = devUserResult.rows[0]?.id;
 
             // Create project for TechStart
-            if (adminUserId) {
+            if (techAdminUserId) {
                 const projResult = await db.query(
                     `INSERT INTO projects (tenant_id, name, description, created_by, status)
            VALUES ($1, $2, $3, $4, $5)
-           RETURNING id`, [tenantId, 'API Development', 'Build RESTful API for internal tools', adminUserId, 'active']
+           RETURNING id`, [techTenantId, 'API Development', 'Build RESTful API for internal tools', techAdminUserId, 'active']
                 );
 
-                const projId = projResult.rows[0] ? .id;
+                const projId = projResult.rows[0]?.id;
 
                 // Create task for TechStart
                 if (projId && devUserId) {
                     await db.query(
                         `INSERT INTO tasks (project_id, tenant_id, title, description, status, priority, assigned_to)
-             VALUES ($1, $2, $3, $4, $5, $6, $7)`, [projId, tenantId, 'Implement authentication endpoints', 'Add JWT-based authentication', 'in_progress', 'high', devUserId]
+             VALUES ($1, $2, $3, $4, $5, $6, $7)`, [projId, techTenantId, 'Implement authentication endpoints', 'Add JWT-based authentication', 'in_progress', 'high', devUserId]
                     );
                 }
             }
