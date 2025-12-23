@@ -1,36 +1,25 @@
-# Multi-stage build for frontend
-FROM node:18-alpine AS builder
-
+# Frontend Dockerfile (production)
+# 1) Build the React/Vite app
+FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+COPY package.json package-lock.json* ./
+RUN npm ci
 
-# Install dependencies
-RUN npm install
-
-# Copy source code
 COPY . .
 
-# Build React application
+# Provide a default at build time. (Runtime is handled by nginx proxying /api)
+ARG VITE_API_URL=/api
+ENV VITE_API_URL=$VITE_API_URL
+
 RUN npm run build
 
-# Production stage - serve with node
-FROM node:18-alpine
+# 2) Serve static files via nginx on port 3000
+FROM nginx:1.27-alpine
 
-WORKDIR /app
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Install serve to run production build
-RUN npm install -g serve
-
-# Copy built application from builder
-COPY --from=builder /app/build ./build
-
-# Copy package.json for reference
-COPY --from=builder /app/package.json ./
-
-# Expose port
 EXPOSE 3000
 
-# Start application - serve the build directory
-CMD ["serve", "-s", "build", "-l", "3000"]
+CMD ["nginx", "-g", "daemon off;"]

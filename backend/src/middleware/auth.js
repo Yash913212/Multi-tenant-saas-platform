@@ -1,62 +1,27 @@
-const jwt = require('jsonwebtoken');
-const { AuthenticationError, AuthorizationError } = require('../utils/errors');
+import jwt from 'jsonwebtoken';
+import { fail } from '../utils/response.js';
 
-const authMiddleware = (req, res, next) => {
+export function authRequired(req, res, next) {
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    if (!token) return res.status(401).json(fail('Token missing'));
     try {
-        const token = req.headers.authorization ?.split(' ')[1];
-
-        if (!token) {
-            throw new AuthenticationError('No token provided');
-        }
-
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = {
-            userId: decoded.userId,
-            tenantId: decoded.tenantId,
-            role: decoded.role,
-        };
+        const payload = jwt.verify(token, process.env.JWT_SECRET);
+        req.auth = { userId: payload.userId, tenantId: payload.tenantId, role: payload.role };
         next();
-    } catch (error) {
-        if (error instanceof jwt.JsonWebTokenError) {
-            return res.status(401).json({
-                success: false,
-                message: 'Invalid token',
-                data: null,
-            });
-        }
-        return res.status(401).json({
-            success: false,
-            message: error.message,
-            data: null,
-        });
+    } catch (e) {
+        return res.status(401).json(fail('Token invalid or expired'));
     }
-};
+}
 
-const superAdminOnly = (req, res, next) => {
-    if (req.user.role !== 'super_admin') {
-        return res.status(403).json({
-            success: false,
-            message: 'Access denied. Super admin only.',
-            data: null,
-        });
+export function optionalAuth(req, res, next) {
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    if (token) {
+        try {
+            const payload = jwt.verify(token, process.env.JWT_SECRET);
+            req.auth = { userId: payload.userId, tenantId: payload.tenantId, role: payload.role };
+        } catch { /* ignore */ }
     }
     next();
-};
-
-const tenantAdminOrOwner = (req, res, next) => {
-    const allowedRoles = ['super_admin', 'tenant_admin'];
-    if (!allowedRoles.includes(req.user.role)) {
-        return res.status(403).json({
-            success: false,
-            message: 'Access denied.',
-            data: null,
-        });
-    }
-    next();
-};
-
-module.exports = {
-    authMiddleware,
-    superAdminOnly,
-    tenantAdminOrOwner,
-};
+}

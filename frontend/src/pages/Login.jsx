@@ -1,153 +1,77 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
-import Input from '../components/Common/Input';
-import Button from '../components/Common/Button';
-import { isValidEmail } from '../utils/helpers';
+import { apiFetch, setToken } from '../api.js';
+import { Button, Field, Input } from '../ui/index.js';
 
-export const Login = () => {
-  const navigate = useNavigate();
-  const { login, error: authError } = useAuth();
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    subdomain: '',
-    rememberMe: false,
-  });
-  const [errors, setErrors] = useState({});
+export default function Login({ onLoggedIn }) {
+  const [email, setEmail] = useState('admin@demo.com');
+  const [password, setPassword] = useState('Demo@123');
+  const [tenantSubdomain, setTenantSubdomain] = useState('demo');
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const validate = () => {
-    const newErrors = {};
-
-    if (!isValidEmail(formData.email)) {
-      newErrors.email = 'Invalid email address';
-    }
-
-    if (!formData.password || formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
-    }
-
-    if (!formData.subdomain.trim()) {
-      newErrors.subdomain = 'Subdomain is required';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
-    if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: '',
-      }));
-    }
-  };
-
-  const handleSubmit = async (e) => {
+  async function onSubmit(e) {
     e.preventDefault();
-    if (!validate()) return;
-
     setLoading(true);
-    const result = await login(
-      formData.email,
-      formData.password,
-      formData.subdomain
-    );
-
-    if (result.success) {
-      if (formData.rememberMe) {
-        localStorage.setItem('rememberedSubdomain', formData.subdomain);
-      }
-      navigate('/dashboard');
-    }
+    setError('');
+    const r = await apiFetch('/auth/login', {
+      method: 'POST',
+      body: { email, password, tenantSubdomain },
+    });
     setLoading(false);
-  };
+    if (!r.ok) {
+      setError(r.data?.message || 'Login failed');
+      return;
+    }
+    setToken(r.data.data.token);
+    await onLoggedIn?.();
+    navigate('/dashboard');
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center px-4">
-      <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center text-gray-900 mb-2">
-          Welcome Back
-        </h1>
-        <p className="text-center text-gray-600 mb-6">
-          Login to your SaaS account
-        </p>
-
-        {authError && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
-            {authError}
+    <div className="authWrap">
+      <div className="authCard">
+        <div className="authGrid">
+          <div className="authLeft">
+            <h1 className="miniTitle">Welcome back</h1>
+            <p className="miniText">
+              Sign in to manage users, projects, and tasks — securely isolated per tenant.
+            </p>
+            <div className="footerNote">
+              Tip: Use <span className="kbd">demo</span> with <span className="kbd">admin@demo.com</span>.
+            </div>
           </div>
-        )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            label="Email"
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            error={errors.email}
-            placeholder="you@example.com"
-            required
-          />
+          <div className="authRight">
+            <div className="row" style={{ justifyContent: 'space-between' }}>
+              <div>
+                <h2 className="pageTitle" style={{ fontSize: 24, margin: 0 }}>Login</h2>
+                <p className="pageSubtitle">Enter your credentials to continue.</p>
+              </div>
+            </div>
 
-          <Input
-            label="Password"
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            error={errors.password}
-            placeholder="Your password"
-            required
-          />
+            <form onSubmit={onSubmit} className="grid" style={{ marginTop: 14 }}>
+              <Field label="Email">
+                <Input value={email} onChange={e => setEmail(e.target.value)} type="email" autoComplete="email" required />
+              </Field>
+              <Field label="Password">
+                <Input value={password} onChange={e => setPassword(e.target.value)} type="password" autoComplete="current-password" required />
+              </Field>
+              <Field label="Tenant subdomain" hint="Example: demo">
+                <Input value={tenantSubdomain} onChange={e => setTenantSubdomain(e.target.value)} required />
+              </Field>
 
-          <Input
-            label="Tenant Subdomain"
-            name="subdomain"
-            value={formData.subdomain}
-            onChange={handleChange}
-            error={errors.subdomain}
-            placeholder="mycompany"
-            required
-          />
+              {error && <div className="alert alertError">{error}</div>}
 
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              name="rememberMe"
-              checked={formData.rememberMe}
-              onChange={handleChange}
-              className="w-4 h-4"
-            />
-            <span className="text-sm text-gray-700">Remember me</span>
-          </label>
-
-          <Button
-            type="submit"
-            loading={loading}
-            className="w-full"
-          >
-            Login
-          </Button>
-        </form>
-
-        <p className="text-center text-gray-600 mt-6">
-          Don't have an account?{' '}
-          <Link to="/register" className="text-blue-500 hover:text-blue-700 font-semibold">
-            Register here
-          </Link>
-        </p>
+              <div className="row" style={{ justifyContent: 'space-between' }}>
+                <span className="hint">Don’t have an account? <Link to="/register">Register tenant</Link></span>
+                <Button variant="primary" disabled={loading} type="submit">{loading ? 'Logging in…' : 'Login'}</Button>
+              </div>
+            </form>
+          </div>
+        </div>
       </div>
     </div>
   );
-};
-
-export default Login;
+}

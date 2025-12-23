@@ -1,251 +1,128 @@
-import React, { useState, useEffect } from 'react';
-import { FiCheckCircle, FiClock, FiTrendingUp, FiFolder } from 'react-icons/fi';
-import Card from '../components/Common/Card';
-import { projectsAPI } from '../services/api';
-import { formatDate } from '../utils/helpers';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { apiFetch } from '../api.js';
+import { Badge, Button, Card } from '../ui/index.js';
 
-export const Dashboard = () => {
-  const [stats, setStats] = useState({
-    totalProjects: 0,
-    totalTasks: 0,
-    completedTasks: 0,
-    pendingTasks: 0,
-  });
+export default function Dashboard({ me }) {
   const [projects, setProjects] = useState([]);
-  const [tasks, setTasks] = useState([]);
-  const [taskFilter, setTaskFilter] = useState('all');
+  const [myTasks, setMyTasks] = useState([]);
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    try {
+    (async () => {
       setLoading(true);
-      const projectsResponse = await projectsAPI.getAll();
-      const projectsList = projectsResponse.data.projects || [];
-      setProjects(projectsList.slice(0, 5));
-
-      // Calculate stats
-      let totalTasks = 0;
-      let completedTasks = 0;
-      let pendingTasks = 0;
-      let allTasks = [];
-
-      for (const project of projectsList) {
-        try {
-          const tasksResponse = await projectsAPI.getTasks(project.id);
-          const projectTasks = tasksResponse.data.tasks || [];
-          allTasks = [...allTasks, ...projectTasks];
-          totalTasks += projectTasks.length;
-          completedTasks += projectTasks.filter((t) => t.status === 'completed').length;
-          pendingTasks += projectTasks.filter((t) => t.status !== 'completed').length;
-        } catch (err) {
-          console.error('Error fetching tasks for project:', err);
+      setError('');
+      const p = await apiFetch('/projects?limit=5');
+      if (p.ok) setProjects(p.data.data.projects);
+      const uid = me?.id;
+      if (uid) {
+        // grab tasks across projects by iterating projects after fetch (simple demo)
+        const all = [];
+        for (const proj of (p.ok ? p.data.data.projects : [])) {
+          const t = await apiFetch(`/tasks/projects/${proj.id}/tasks?assignedTo=${uid}&limit=20`);
+          if (t.ok) all.push(...t.data.data.tasks.map(x => ({ ...x, projectName: proj.name })));
         }
+        setMyTasks(all.slice(0, 10));
       }
-
-      setTasks(allTasks);
-      setStats({
-        totalProjects: projectsList.length,
-        totalTasks,
-        completedTasks,
-        pendingTasks,
-      });
-    } catch (err) {
-      console.error('Error fetching dashboard data:', err);
-      setError('Failed to load dashboard data');
-    } finally {
       setLoading(false);
-    }
-  };
+    })().catch(() => setError('Failed to load dashboard'));
+  }, [me?.id]);
 
-  const getFilteredTasks = () => {
-    if (taskFilter === 'all') return tasks;
-    return tasks.filter((t) => t.status === taskFilter);
-  };
+  const totalProjects = projects.length;
+  const totalTasks = myTasks.length;
+  const doneTasks = myTasks.filter(t => t.status === 'done').length;
+  const inProgressTasks = myTasks.filter(t => t.status === 'in_progress').length;
+  const pendingTasks = totalTasks - doneTasks;
 
-  const filteredTasks = getFilteredTasks();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="text-gray-600 mt-4">Loading dashboard...</p>
-        </div>
-      </div>
-    );
-  }
+  const greeting = useMemo(() => {
+    const name = me?.fullName || me?.email || 'there';
+    return `Welcome, ${name}`;
+  }, [me?.fullName, me?.email]);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Dashboard</h1>
+    <div className="grid">
+      <div>
+        <h1 className="pageTitle">{greeting}</h1>
+        <p className="pageSubtitle">A quick overview of what’s happening in your tenant.</p>
+      </div>
 
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
-            {error}
+      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+        <Card title="Projects" subtitle="Active workspaces">
+          <div className="cardValue">{totalProjects}</div>
+          <div className="hint" style={{ marginTop: 8 }}>Create, track, and ship across teams.</div>
+        </Card>
+        <Card title="My tasks" subtitle="Assigned to you">
+          <div className="cardValue">{totalTasks}</div>
+          <div className="row" style={{ marginTop: 10 }}>
+            <Badge tone="in_progress">In progress: {inProgressTasks}</Badge>
+            <Badge tone="done">Done: {doneTasks}</Badge>
           </div>
-        )}
+        </Card>
+        <Card title="Pending" subtitle="Not done yet">
+          <div className="cardValue">{pendingTasks}</div>
+          <div className="hint" style={{ marginTop: 8 }}>Keep the momentum going.</div>
+        </Card>
+      </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <div className="flex items-center justify-between">
+      {error && <div className="alert alertError">{error}</div>}
+
+      <div className="grid2">
+        <section className="cardSoft">
+          <div className="cardInner">
+            <div className="row" style={{ justifyContent: 'space-between' }}>
               <div>
-                <p className="text-gray-600 text-sm">Total Projects</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">
-                  {stats.totalProjects}
-                </p>
+                <div className="brandTitle" style={{ fontSize: 18 }}>Recent projects</div>
+                <div className="hint">Jump back into active work.</div>
               </div>
-              <div className="bg-blue-100 p-3 rounded-lg">
-                <FiFolder className="text-blue-500" size={24} />
-              </div>
+              <Button as={Link} to="/projects" variant="ghost">View all</Button>
             </div>
-          </Card>
 
-          <Card>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm">Total Tasks</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">
-                  {stats.totalTasks}
-                </p>
-              </div>
-              <div className="bg-yellow-100 p-3 rounded-lg">
-                <FiClock className="text-yellow-500" size={24} />
-              </div>
-            </div>
-          </Card>
-
-          <Card>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm">Completed</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">
-                  {stats.completedTasks}
-                </p>
-              </div>
-              <div className="bg-green-100 p-3 rounded-lg">
-                <FiCheckCircle className="text-green-500" size={24} />
-              </div>
-            </div>
-          </Card>
-
-          <Card>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm">Pending</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">
-                  {stats.pendingTasks}
-                </p>
-              </div>
-              <div className="bg-orange-100 p-3 rounded-lg">
-                <FiTrendingUp className="text-orange-500" size={24} />
-              </div>
-            </div>
-          </Card>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Recent Projects */}
-          <Card>
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Projects</h2>
-            {projects.length === 0 ? (
-              <p className="text-gray-600 text-center py-6">No projects yet</p>
-            ) : (
-              <div className="space-y-3">
-                {projects.map((project) => (
-                  <div key={project.id} className="p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                    <h3 className="font-semibold text-gray-900">{project.name}</h3>
-                    <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                      {project.description || 'No description'}
-                    </p>
-                    <div className="flex justify-between items-center mt-2">
-                      <span className="text-xs text-gray-500">
-                        {formatDate(project.created_at)}
-                      </span>
-                      <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                        project.status === 'completed'
-                          ? 'bg-green-100 text-green-800'
-                          : project.status === 'in_progress'
-                          ? 'bg-blue-100 text-blue-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {project.status?.replace(/_/g, ' ').toUpperCase()}
-                      </span>
+            <div className="grid" style={{ marginTop: 12 }}>
+              {loading ? (
+                <div className="hint">Loading projects…</div>
+              ) : projects.length ? (
+                projects.map(p => (
+                  <div key={p.id} className="row" style={{ justifyContent: 'space-between' }}>
+                    <div>
+                      <div style={{ fontWeight: 850 }}>{p.name}</div>
+                      <div className="hint">Tasks: {p.taskCount} • Done: {p.completedTaskCount}</div>
                     </div>
+                    <Button as={Link} to={`/projects/${p.id}`} variant="secondary">Open</Button>
                   </div>
-                ))}
-              </div>
-            )}
-          </Card>
-
-          {/* My Tasks */}
-          <Card>
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-gray-900">My Tasks</h2>
-              <select
-                value={taskFilter}
-                onChange={(e) => setTaskFilter(e.target.value)}
-                className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="all">All</option>
-                <option value="todo">To Do</option>
-                <option value="in_progress">In Progress</option>
-                <option value="completed">Completed</option>
-              </select>
+                ))
+              ) : (
+                <div className="hint">No projects yet — create one to get started.</div>
+              )}
             </div>
-            {filteredTasks.length === 0 ? (
-              <p className="text-gray-600 text-center py-6">
-                {taskFilter === 'all' ? 'No tasks' : `No ${taskFilter.replace('_', ' ')} tasks`}
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {filteredTasks.slice(0, 5).map((task) => (
-                  <div key={task.id} className="p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900">{task.title}</h3>
-                        <p className="text-xs text-gray-600 mt-1">
-                          {task.priority && (
-                            <span className={`inline-block px-2 py-0.5 rounded mr-2 ${
-                              task.priority === 'urgent'
-                                ? 'bg-red-100 text-red-800'
-                                : task.priority === 'high'
-                                ? 'bg-orange-100 text-orange-800'
-                                : task.priority === 'medium'
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : 'bg-green-100 text-green-800'
-                            }`}>
-                              {task.priority}
-                            </span>
-                          )}
-                          Due: {task.due_date ? formatDate(task.due_date) : 'No date'}
-                        </p>
-                      </div>
-                      <span className={`px-2 py-1 rounded text-xs font-semibold whitespace-nowrap ml-2 ${
-                        task.status === 'completed'
-                          ? 'bg-green-100 text-green-800'
-                          : task.status === 'in_progress'
-                          ? 'bg-blue-100 text-blue-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {task.status?.replace(/_/g, ' ').toUpperCase()}
-                      </span>
+          </div>
+        </section>
+
+        <section className="cardSoft">
+          <div className="cardInner">
+            <div className="brandTitle" style={{ fontSize: 18 }}>My tasks</div>
+            <div className="hint">Top 10 tasks assigned to you.</div>
+
+            <div className="grid" style={{ marginTop: 12 }}>
+              {loading ? (
+                <div className="hint">Loading tasks…</div>
+              ) : myTasks.length ? (
+                myTasks.map(t => (
+                  <div key={t.id} className="row" style={{ justifyContent: 'space-between' }}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</div>
+                      <div className="hint">{t.projectName} • Priority: {t.priority}</div>
                     </div>
+                    <Badge tone={t.status}>{t.status}</Badge>
                   </div>
-                ))}
-              </div>
-            )}
-          </Card>
-        </div>
+                ))
+              ) : (
+                <div className="hint">No assigned tasks found.</div>
+              )}
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   );
-};
-
-export default Dashboard;
+}

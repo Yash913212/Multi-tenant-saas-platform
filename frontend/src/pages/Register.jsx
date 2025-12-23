@@ -1,209 +1,103 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
-import Input from '../components/Common/Input';
-import Button from '../components/Common/Button';
-import { isValidSubdomain, isValidEmail } from '../utils/helpers';
+import { Link, useNavigate } from 'react-router-dom';
+import { apiFetch } from '../api.js';
+import { Button, Field, Input } from '../ui/index.js';
 
-export const Register = () => {
-  const navigate = useNavigate();
-  const { register, error: authError } = useAuth();
-  const [formData, setFormData] = useState({
-    organizationName: '',
-    subdomain: '',
-    adminEmail: '',
-    password: '',
-    confirmPassword: '',
-    agreeToTerms: false,
-  });
-  const [errors, setErrors] = useState({});
+export default function Register() {
+  const [tenantName, setTenantName] = useState('Test Company Alpha');
+  const [subdomain, setSubdomain] = useState('testalpha');
+  const [adminEmail, setAdminEmail] = useState('admin@testalpha.com');
+  const [adminFullName, setAdminFullName] = useState('Alpha Admin');
+  const [adminPassword, setAdminPassword] = useState('TestPass@123');
+  const [confirmPassword, setConfirmPassword] = useState('TestPass@123');
+  const [terms, setTerms] = useState(true);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const navigate = useNavigate();
 
-  const validate = () => {
-    const newErrors = {};
-
-    if (!formData.organizationName.trim()) {
-      newErrors.organizationName = 'Organization name is required';
-    }
-
-    if (!isValidSubdomain(formData.subdomain)) {
-      newErrors.subdomain = 'Subdomain must be 3+ characters, lowercase, letters/numbers/hyphens only';
-    }
-
-    if (!isValidEmail(formData.adminEmail)) {
-      newErrors.adminEmail = 'Invalid email address';
-    }
-
-    if (!formData.password || formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
-    }
-
-    if (!formData.agreeToTerms) {
-      newErrors.agreeToTerms = 'You must agree to the terms';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
-    if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: '',
-      }));
-    }
-  };
-
-  const handleSubmit = async (e) => {
+  async function onSubmit(e) {
     e.preventDefault();
-    if (!validate()) return;
-
-    setLoading(true);
-    const result = await register(
-      formData.organizationName,
-      formData.subdomain,
-      formData.adminEmail,
-      formData.password
-    );
-
-    if (result.success) {
-      setSuccess(true);
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 1500);
+    setError('');
+    setSuccess('');
+    if (adminPassword !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
     }
+    if (!terms) {
+      setError('You must accept Terms & Conditions');
+      return;
+    }
+    setLoading(true);
+    const r = await apiFetch('/auth/register-tenant', {
+      method: 'POST',
+      body: { tenantName, subdomain, adminEmail, adminPassword, adminFullName },
+    });
     setLoading(false);
-  };
+    if (!r.ok) {
+      setError(r.data?.message || 'Registration failed');
+      return;
+    }
+    setSuccess('Tenant registered successfully. Redirecting to login…');
+    setTimeout(() => navigate('/login'), 1200);
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center px-4">
-      <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center text-gray-900 mb-2">
-          Create Account
-        </h1>
-        <p className="text-center text-gray-600 mb-6">
-          Start your SaaS journey today
-        </p>
-
-        {success && (
-          <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-800">
-            ✓ Registration successful! Redirecting...
-          </div>
-        )}
-
-        {authError && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
-            {authError}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            label="Organization Name"
-            name="organizationName"
-            value={formData.organizationName}
-            onChange={handleChange}
-            error={errors.organizationName}
-            placeholder="Your company name"
-            required
-          />
-
-          <div>
-            <Input
-              label="Subdomain"
-              name="subdomain"
-              value={formData.subdomain}
-              onChange={handleChange}
-              error={errors.subdomain}
-              placeholder="mycompany"
-              required
-            />
-            {formData.subdomain && (
-              <p className="text-sm text-gray-600 mt-2">
-                URL: <span className="font-mono font-bold">{formData.subdomain}.yoursaasapp.com</span>
-              </p>
-            )}
+    <div className="authWrap">
+      <div className="authCard">
+        <div className="authGrid">
+          <div className="authLeft">
+            <h1 className="miniTitle">Create your workspace</h1>
+            <p className="miniText">
+              Start with a tenant admin account. You can invite users and create projects right away.
+            </p>
+            <div className="footerNote">
+              Subdomain becomes your tenant identifier (e.g., <span className="kbd">demo</span>).
+            </div>
           </div>
 
-          <Input
-            label="Admin Email"
-            type="email"
-            name="adminEmail"
-            value={formData.adminEmail}
-            onChange={handleChange}
-            error={errors.adminEmail}
-            placeholder="admin@company.com"
-            required
-          />
+          <div className="authRight">
+            <h2 className="pageTitle" style={{ fontSize: 24, margin: 0 }}>Register Tenant</h2>
+            <p className="pageSubtitle">Provision a new organization and admin user.</p>
 
-          <Input
-            label="Password"
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            error={errors.password}
-            placeholder="At least 6 characters"
-            required
-          />
+            <form onSubmit={onSubmit} className="grid" style={{ marginTop: 14 }}>
+              <Field label="Organization name">
+                <Input value={tenantName} onChange={e => setTenantName(e.target.value)} required />
+              </Field>
+              <Field label="Subdomain" hint={`${subdomain}.yourapp.com`}>
+                <Input value={subdomain} onChange={e => setSubdomain(e.target.value)} required />
+              </Field>
+              <Field label="Admin email">
+                <Input value={adminEmail} onChange={e => setAdminEmail(e.target.value)} type="email" autoComplete="email" required />
+              </Field>
+              <Field label="Admin full name">
+                <Input value={adminFullName} onChange={e => setAdminFullName(e.target.value)} required />
+              </Field>
+              <Field label="Password" hint="Minimum 8 characters">
+                <Input value={adminPassword} onChange={e => setAdminPassword(e.target.value)} type="password" required minLength={8} />
+              </Field>
+              <Field label="Confirm password">
+                <Input value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} type="password" required minLength={8} />
+              </Field>
 
-          <Input
-            label="Confirm Password"
-            type="password"
-            name="confirmPassword"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            error={errors.confirmPassword}
-            placeholder="Confirm password"
-            required
-          />
+              <label className="row" style={{ justifyContent: 'space-between' }}>
+                <span className="hint">
+                  <input type="checkbox" checked={terms} onChange={e => setTerms(e.target.checked)} style={{ marginRight: 8 }} />
+                  Accept Terms & Conditions
+                </span>
+              </label>
 
-          <label className="flex items-start gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              name="agreeToTerms"
-              checked={formData.agreeToTerms}
-              onChange={handleChange}
-              className="mt-1 w-4 h-4"
-            />
-            <span className="text-sm text-gray-700">
-              I agree to the Terms & Conditions and Privacy Policy
-            </span>
-          </label>
-          {errors.agreeToTerms && (
-            <p className="text-red-500 text-sm">{errors.agreeToTerms}</p>
-          )}
+              {error && <div className="alert alertError">{error}</div>}
+              {success && <div className="alert alertSuccess">{success}</div>}
 
-          <Button
-            type="submit"
-            loading={loading}
-            className="w-full"
-            disabled={success}
-          >
-            Create Account
-          </Button>
-        </form>
-
-        <p className="text-center text-gray-600 mt-6">
-          Already have an account?{' '}
-          <Link to="/login" className="text-blue-500 hover:text-blue-700 font-semibold">
-            Login here
-          </Link>
-        </p>
+              <div className="row" style={{ justifyContent: 'space-between' }}>
+                <span className="hint">Already have an account? <Link to="/login">Login</Link></span>
+                <Button variant="primary" disabled={loading} type="submit">{loading ? 'Creating…' : 'Create Tenant'}</Button>
+              </div>
+            </form>
+          </div>
+        </div>
       </div>
     </div>
   );
-};
-
-export default Register;
+}

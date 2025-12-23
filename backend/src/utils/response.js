@@ -1,21 +1,12 @@
-const formatResponse = (success, message, data = null) => {
-    return {
-        success,
-        message,
-        data,
-    };
-};
+export function ok(data = null, message = undefined) {
+    const res = { success: true };
+    if (message) res.message = message;
+    if (data !== null) res.data = data;
+    return res;
+}
 
-const successResponse = (message, data) => {
-    return formatResponse(true, message, data);
-};
-
-const errorResponse = (message, data = null) => {
-    return formatResponse(false, message, data);
-};
-
-module.exports = {
-    formatResponse,
-    successResponse,
-    errorResponse,
-};
+export function fail(message, data = undefined) {
+    const res = { success: false, message };
+    if (data !== undefined) res.data = data;
+    return res;
+}

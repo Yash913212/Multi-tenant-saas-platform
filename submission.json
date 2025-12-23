@@ -12,125 +12,31 @@
                 "subdomain": "demo",
                 "status": "active",
                 "subscriptionPlan": "pro",
-                "maxUsers": 25,
-                "maxProjects": 15,
                 "admin": {
                     "email": "admin@demo.com",
                     "password": "Demo@123",
-                    "fullName": "Jane Doe",
                     "role": "tenant_admin"
                 },
                 "users": [
                     {
                         "email": "user1@demo.com",
                         "password": "User@123",
-                        "fullName": "Alice Johnson",
                         "role": "user"
                     },
                     {
                         "email": "user2@demo.com",
                         "password": "User@123",
-                        "fullName": "Bob Smith",
                         "role": "user"
                     }
                 ],
                 "projects": [
                     {
-                        "name": "Website Redesign",
-                        "description": "Complete redesign of company website",
-                        "status": "active"
+                        "name": "Project Alpha",
+                        "description": "First demo project"
                     },
                     {
-                        "name": "Mobile App Development",
-                        "description": "Build native mobile applications",
-                        "status": "in_progress"
-                    }
-                ],
-                "tasks": [
-                    {
-                        "projectName": "Website Redesign",
-                        "title": "Design homepage mockup",
-                        "description": "Create high-fidelity design for homepage",
-                        "status": "in_progress",
-                        "priority": "high",
-                        "assignedTo": "user1@demo.com",
-                        "dueDate": "2024-02-15"
-                    },
-                    {
-                        "projectName": "Website Redesign",
-                        "title": "Set up development environment",
-                        "description": "Configure webpack and build tools",
-                        "status": "completed",
-                        "priority": "high",
-                        "assignedTo": "user2@demo.com",
-                        "dueDate": "2024-01-25"
-                    },
-                    {
-                        "projectName": "Website Redesign",
-                        "title": "Write unit tests",
-                        "description": "Write unit tests for core components",
-                        "status": "todo",
-                        "priority": "medium",
-                        "assignedTo": "user1@demo.com",
-                        "dueDate": "2024-03-01"
-                    },
-                    {
-                        "projectName": "Mobile App Development",
-                        "title": "Design app UI mockups",
-                        "description": "Create UI designs in Figma",
-                        "status": "in_progress",
-                        "priority": "high",
-                        "assignedTo": "user2@demo.com",
-                        "dueDate": "2024-02-10"
-                    },
-                    {
-                        "projectName": "Mobile App Development",
-                        "title": "API integration",
-                        "description": "Integrate backend API with mobile app",
-                        "status": "todo",
-                        "priority": "medium",
-                        "assignedTo": null,
-                        "dueDate": "2024-02-28"
-                    }
-                ]
-            },
-            {
-                "name": "TechStart Inc",
-                "subdomain": "techstart",
-                "status": "active",
-                "subscriptionPlan": "free",
-                "maxUsers": 5,
-                "maxProjects": 3,
-                "admin": {
-                    "email": "admin@techstart.com",
-                    "password": "Tech@123",
-                    "fullName": "Sarah Williams",
-                    "role": "tenant_admin"
-                },
-                "users": [
-                    {
-                        "email": "dev@techstart.com",
-                        "password": "Dev@123",
-                        "fullName": "Mike Chen",
-                        "role": "user"
-                    }
-                ],
-                "projects": [
-                    {
-                        "name": "API Development",
-                        "description": "Build RESTful API for internal tools",
-                        "status": "active"
-                    }
-                ],
-                "tasks": [
-                    {
-                        "projectName": "API Development",
-                        "title": "Implement authentication endpoints",
-                        "description": "Add JWT-based authentication",
-                        "status": "in_progress",
-                        "priority": "high",
-                        "assignedTo": "dev@techstart.com",
-                        "dueDate": "2024-02-05"
+                        "name": "Project Beta",
+                        "description": "Second demo project"
                     }
                 ]
             }

@@ -1,14 +1,9 @@
-const errorHandler = (err, req, res, next) => {
-    console.error('Error:', err);
+import { fail } from '../utils/response.js';
 
-    const statusCode = err.statusCode || 500;
+export function errorHandler(err, req, res, next) {
+    console.error(err);
+    if (res.headersSent) return next(err);
+    const status = err.status || 500;
     const message = err.message || 'Internal server error';
-
-    res.status(statusCode).json({
-        success: false,
-        message,
-        data: null,
-    });
-};
-
-module.exports = errorHandler;
+    res.status(status).json(fail(message));
+}
