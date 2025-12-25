@@ -84,6 +84,15 @@ Your site URL will be:
 
 See `docs/API.md` for the full endpoint documentation.
 
+## Documentation
+
+All required documentation artifacts are under `docs/`:
+- Product Requirements: `docs/PRD.md`
+- Architecture + endpoint list: `docs/architecture.md`
+- Technical specification + Docker setup: `docs/technical-spec.md`
+- Research (multi-tenancy, stack justification, security): `docs/research.md`
+- API documentation (19 core endpoints + operational endpoints): `docs/API.md`
+
 ## Demo video
 
 YouTube (Unlisted/Public, 5–12 minutes): https://www.youtube.com/watch?v=REPLACE_WITH_YOUR_VIDEO_ID

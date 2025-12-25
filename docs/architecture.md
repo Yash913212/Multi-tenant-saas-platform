@@ -17,33 +17,38 @@ See diagrams:
 
 Base path: `/api`
 
-Health
-- `GET /health`
+This backend exposes **19 core application endpoints** (Auth + Tenants + Users + Projects + Tasks) that match the rubric, plus **2 operational endpoints** used for readiness/version checks.
 
-Auth
+### Operational endpoints (not part of the 19 core)
+- `GET /health` (readiness; returns `503` while initializing)
+- `GET /` (API info/version)
+
+### Core endpoints (19)
+
+Auth (4)
 - `POST /auth/register-tenant`
 - `POST /auth/login`
 - `GET /auth/me`
 - `POST /auth/logout`
 
-Tenants (super_admin scoped)
+Tenants (3) (super_admin scoped except where noted)
 - `GET /tenants`
 - `GET /tenants/:tenantId`
 - `PUT /tenants/:tenantId`
 
-Users
+Users (4)
 - `POST /users/:tenantId/users`
 - `GET /users/:tenantId/users`
 - `PUT /users/:userId`
 - `DELETE /users/:userId`
 
-Projects
+Projects (4)
 - `POST /projects`
 - `GET /projects`
 - `PUT /projects/:projectId`
 - `DELETE /projects/:projectId`
 
-Tasks
+Tasks (4)
 - `POST /tasks/projects/:projectId/tasks`
 - `GET /tasks/projects/:projectId/tasks`
 - `PATCH /tasks/:taskId/status`
