@@ -9,9 +9,11 @@ const router = express.Router();
 router.post('/', authRequired, async(req, res) => {
     const { name, description, status = 'active' } = req.body;
     const { tenantId, userId } = req.auth;
+    if (req.auth.role === 'super_admin') return res.status(403).json(fail('Forbidden'));
     if (!name) return res.status(400).json(fail('Validation errors'));
     try {
         const t = await query('SELECT max_projects FROM tenants WHERE id=$1', [tenantId]);
+        if (!t.rowCount) return res.status(404).json(fail('Tenant not found'));
         const maxProjects = t.rows[0].max_projects;
         const c = await query('SELECT COUNT(*)::int AS c FROM projects WHERE tenant_id=$1', [tenantId]);
         if (c.rows[0].c >= maxProjects) return res.status(403).json(fail('Project limit reached'));
@@ -33,6 +35,7 @@ router.post('/', authRequired, async(req, res) => {
 router.get('/', authRequired, async(req, res) => {
     const { tenantId } = req.auth;
     const { status, search, page = 1, limit = 20 } = req.query;
+    if (req.auth.role === 'super_admin') return res.status(403).json(fail('Forbidden'));
     try {
         const l = Math.min(100, parseInt(limit, 10));
         const pg = parseInt(page, 10);
@@ -91,12 +94,13 @@ router.get('/', authRequired, async(req, res) => {
 router.put('/:projectId', authRequired, async(req, res) => {
     const { projectId } = req.params;
     const { name, description, status } = req.body;
+    if (req.auth.role === 'super_admin') return res.status(403).json(fail('Forbidden'));
     try {
         const p = await query('SELECT * FROM projects WHERE id=$1', [projectId]);
         if (!p.rowCount) return res.status(404).json(fail('Project not found'));
         const proj = p.rows[0];
-        if (req.auth.role !== 'super_admin' && req.auth.tenantId !== proj.tenant_id) return res.status(403).json(fail('Forbidden'));
-        if (req.auth.role !== 'tenant_admin' && req.auth.userId !== proj.created_by && req.auth.role !== 'super_admin') return res.status(403).json(fail('Not authorized'));
+        if (req.auth.tenantId !== proj.tenant_id) return res.status(403).json(fail('Forbidden'));
+        if (req.auth.role !== 'tenant_admin' && req.auth.userId !== proj.created_by) return res.status(403).json(fail('Not authorized'));
 
         let fields = [];
         let values = [];
@@ -129,12 +133,13 @@ router.put('/:projectId', authRequired, async(req, res) => {
 
 router.delete('/:projectId', authRequired, async(req, res) => {
     const { projectId } = req.params;
+    if (req.auth.role === 'super_admin') return res.status(403).json(fail('Forbidden'));
     try {
         const p = await query('SELECT * FROM projects WHERE id=$1', [projectId]);
         if (!p.rowCount) return res.status(404).json(fail('Project not found'));
         const proj = p.rows[0];
-        if (req.auth.role !== 'super_admin' && req.auth.tenantId !== proj.tenant_id) return res.status(403).json(fail('Forbidden'));
-        if (req.auth.role !== 'tenant_admin' && req.auth.userId !== proj.created_by && req.auth.role !== 'super_admin') return res.status(403).json(fail('Not authorized'));
+        if (req.auth.tenantId !== proj.tenant_id) return res.status(403).json(fail('Forbidden'));
+        if (req.auth.role !== 'tenant_admin' && req.auth.userId !== proj.created_by) return res.status(403).json(fail('Not authorized'));
 
         // cascade tasks by FK; but ensure order
         await query('DELETE FROM tasks WHERE project_id=$1', [projectId]);

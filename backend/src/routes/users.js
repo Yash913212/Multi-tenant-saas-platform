@@ -8,10 +8,13 @@ import { logAudit } from '../utils/audit.js';
 
 const router = express.Router();
 
+const ALLOWED_USER_ROLES = new Set(['user', 'tenant_admin']);
+
 router.post('/:tenantId/users', authRequired, requireRole('tenant_admin'), async(req, res) => {
     const { tenantId } = req.params;
     const { email, password, fullName, role = 'user' } = req.body;
     if (!email || !password || !fullName) return res.status(400).json(fail('Validation errors'));
+    if (!ALLOWED_USER_ROLES.has(role)) return res.status(400).json(fail('Invalid role'));
     try {
         // Check auth user belongs to tenant
         if (req.auth.role !== 'super_admin' && req.auth.tenantId !== tenantId) return res.status(403).json(fail('Forbidden'));
@@ -51,12 +54,16 @@ router.get('/:tenantId/users', authRequired, async(req, res) => {
         let where = 'WHERE tenant_id=$' + idx;
         p.push(tenantId);
         idx++;
-        if (role) { where += ` AND role=$${idx}`;
+        if (role) {
+            where += ` AND role=$${idx}`;
             p.push(role);
-            idx++; }
-        if (search) { where += ` AND (LOWER(email) LIKE $${idx} OR LOWER(full_name) LIKE $${idx})`;
+            idx++;
+        }
+        if (search) {
+            where += ` AND (LOWER(email) LIKE $${idx} OR LOWER(full_name) LIKE $${idx})`;
             p.push('%' + search.toLowerCase() + '%');
-            idx++; }
+            idx++;
+        }
 
         const l = Math.min(100, parseInt(limit, 10));
         const pg = parseInt(page, 10);
@@ -85,12 +92,19 @@ router.put('/:userId', authRequired, async(req, res) => {
         let values = [];
         let idx = 1;
 
-        if (fullName && (req.auth.userId === userId || req.auth.role === 'tenant_admin' || req.auth.role === 'super_admin')) { fields.push(`full_name=$${idx++}`);
-            values.push(fullName); }
-        if (role && req.auth.role === 'tenant_admin') { fields.push(`role=$${idx++}`);
-            values.push(role); }
-        if (typeof isActive === 'boolean' && req.auth.role === 'tenant_admin') { fields.push(`is_active=$${idx++}`);
-            values.push(isActive); }
+        if (fullName && (req.auth.userId === userId || req.auth.role === 'tenant_admin' || req.auth.role === 'super_admin')) {
+            fields.push(`full_name=$${idx++}`);
+            values.push(fullName);
+        }
+        if (role && req.auth.role === 'tenant_admin') {
+            if (!ALLOWED_USER_ROLES.has(role)) return res.status(400).json(fail('Invalid role'));
+            fields.push(`role=$${idx++}`);
+            values.push(role);
+        }
+        if (typeof isActive === 'boolean' && req.auth.role === 'tenant_admin') {
+            fields.push(`is_active=$${idx++}`);
+            values.push(isActive);
+        }
 
         if (!fields.length) return res.status(403).json(fail('Not authorized'));
 
