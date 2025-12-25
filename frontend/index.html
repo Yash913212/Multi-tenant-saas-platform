@@ -21,7 +21,10 @@
                 var restoredPath = p;
                 if (q) restoredPath += '?' + q.replace(/~and~/g, '&');
                 restoredPath += l.hash || '';
-                window.history.replaceState(null, '', restoredPath);
+                // Preserve the base path (project site subpath) we're currently hosted under.
+                // Example: pathname is "/Multi-tenant-saas-platform/"; we want "/Multi-tenant-saas-platform/dashboard".
+                var basePath = (l.pathname || '').replace(/\/$/, '');
+                window.history.replaceState(null, '', basePath + restoredPath);
             }
         })(window.location);
     </script>
