@@ -45,6 +45,39 @@ Key variables:
 - `FRONTEND_URL` (CORS)
 - `VITE_API_URL` (frontend API base URL)
 
+## Deploy frontend to GitHub Pages
+
+This repository includes a React (Vite) frontend and a Node/Express backend. **GitHub Pages can only host static sites**, so this deploy publishes **only the `frontend/`**.
+
+### Enable GitHub Pages
+
+1. Push this repository to GitHub.
+2. In GitHub: **Settings → Pages**.
+3. Under **Build and deployment**, set **Source** to **GitHub Actions**.
+
+### Configure the backend API URL
+
+GitHub Pages cannot proxy `/api` to your backend (unlike your local Vite dev proxy). Host the backend somewhere else and set the frontend to call it.
+
+Create a repository variable:
+
+- **Settings → Secrets and variables → Actions → Variables → New repository variable**
+- Name: `VITE_API_URL`
+- Value: `https://YOUR_BACKEND_HOST/api`
+
+### Deploy
+
+Pushing to `main` (or `master`) will build and publish the site via `.github/workflows/deploy-pages.yml`.
+
+Your site URL will be:
+
+- `https://<owner>.github.io/<repo>/`
+
+### Notes
+
+- Deep links like `/projects/123` work on GitHub Pages via the SPA 404 redirect (`frontend/public/404.html`).
+- If you deploy as a **user/organization site** (root, no `/<repo>/` subpath), you may need to adjust the redirect logic in `frontend/public/404.html`.
+
 ## API docs
 
 See `docs/API.md` for the full endpoint documentation.

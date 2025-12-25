@@ -5,6 +5,26 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Multi-Tenant SaaS Platform</title>
+
+    <!--
+      GitHub Pages SPA deep-link support.
+      If a user refreshes /projects/123, GH Pages serves 404.html.
+      Our 404.html redirects to /<repo>/?p=/projects/123 ...
+      This script restores the original path client-side.
+    -->
+    <script type="text/javascript">
+        (function(l) {
+            if (l.search && l.search.startsWith('?p=')) {
+                var params = new URLSearchParams(l.search);
+                var p = params.get('p') || '/';
+                var q = params.get('q');
+                var restoredPath = p;
+                if (q) restoredPath += '?' + q.replace(/~and~/g, '&');
+                restoredPath += l.hash || '';
+                window.history.replaceState(null, '', restoredPath);
+            }
+        })(window.location);
+    </script>
 </head>
 
 <body>

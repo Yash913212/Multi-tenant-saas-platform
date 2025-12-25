@@ -3,6 +3,14 @@
 const API_URL =
     import.meta.env.VITE_API_URL || '/api';
 
+if (
+    import.meta.env.PROD && !
+    import.meta.env.VITE_API_URL) {
+    // On GitHub Pages there's no reverse proxy for /api.
+    // The UI will fail to load data until VITE_API_URL is configured at build time.
+    console.warn('[frontend] VITE_API_URL is not set for a production build. Requests will go to /api on the static host.');
+}
+
 export function getToken() {
     return localStorage.getItem('token');
 }
