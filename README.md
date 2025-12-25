@@ -36,7 +36,9 @@ These are also recorded in `submission.json`.
 
 ## Environment variables
 
-Environment variables are provided in the committed `.env` (dev/test values).
+Environment variables for evaluation are set directly in `docker-compose.yml` (so `docker-compose up -d` works with no extra steps).
+
+For local (non-Docker) development, you can copy `.env.example` → `.env` and adjust as needed.
 
 Key variables:
 - `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`
