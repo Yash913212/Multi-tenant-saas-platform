@@ -84,7 +84,7 @@ See `docs/API.md` for the full endpoint documentation.
 
 ## Demo video
 
-YouTube (Unlisted/Public, 5–12 minutes): **ADD_LINK_HERE**
+YouTube (Unlisted/Public, 5–12 minutes): https://www.youtube.com/watch?v=REPLACE_WITH_YOUR_VIDEO_ID
 
 ## Notes
 
