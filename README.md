@@ -95,6 +95,8 @@ All required documentation artifacts are under `docs/`:
 
 ## Demo video
 
+Loom (share link): https://www.loom.com/share/f17a37499e1243e786852ea8b9327cb2
+
 YouTube (Unlisted/Public, 5–12 minutes): https://www.youtube.com/watch?v=REPLACE_WITH_YOUR_VIDEO_ID
 
 ## Notes
