@@ -1,18 +1,15 @@
--- Fix: Ensure demo tenant and user are properly seeded
--- This migration cleans up any incomplete seed data and reinserts it correctly
+-- Fix: Seed demo tenant and admin user
+-- This migration ensures the demo credentials exist for testing
+-- Uses proper ordering to avoid foreign key constraint issues
 
--- Delete existing demo user if it exists (without this the user insert will fail)
-DELETE FROM users WHERE tenant_id = '00000000-0000-0000-0000-000000000001';
+BEGIN;
 
--- Delete existing demo tenant if it exists
-DELETE FROM tenants WHERE id = '00000000-0000-0000-0000-000000000001';
-
--- Now insert the tenant first (this is required before inserting the user)
+-- Insert the demo tenant first (required before inserting user)
 INSERT INTO tenants (id, name, subdomain, status, subscription_plan, max_users, max_projects, created_at, updated_at)
 VALUES ('00000000-0000-0000-0000-000000000001', 'Demo Company', 'demo', 'active', 'pro', 25, 15, NOW(), NOW())
 ON CONFLICT (id) DO NOTHING;
 
--- Then insert the admin user for the demo tenant
+-- Insert the admin user for the demo tenant
 INSERT INTO users (id, tenant_id, email, password_hash, full_name, role, is_active, created_at, updated_at)
 VALUES (
   '00000000-0000-0000-0000-000000000101',
@@ -26,3 +23,5 @@ VALUES (
   NOW()
 )
 ON CONFLICT (tenant_id, email) DO NOTHING;
+
+COMMIT;
